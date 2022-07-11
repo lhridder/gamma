@@ -13,7 +13,7 @@ import (
 
 var (
 	playersConnected = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "infrared_connected",
+		Name: "gamma_connected",
 		Help: "The total number of connected players",
 	}, []string{"host"})
 )
@@ -95,6 +95,8 @@ func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
 		rc.Close()
 		return err
 	}
+	playersConnected.With(prometheus.Labels{"host": proxy.DomainName()}).Inc()
+	defer playersConnected.With(prometheus.Labels{"host": proxy.DomainName()}).Dec()
 
 	go func() {
 		for {

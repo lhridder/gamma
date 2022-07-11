@@ -88,6 +88,14 @@ func main() {
 		}
 	}()
 
+	if gamma.GammaConfig.PrometheusEnabled {
+		err := gateway.EnablePrometheus(gamma.GammaConfig.PrometheusBind)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
 	log.Println("Starting Infrared")
 	if err := gateway.ListenAndServe(proxies); err != nil {
 		log.Fatal("Gateway exited; error: ", err)

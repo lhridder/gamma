@@ -10,9 +10,11 @@ import (
 	"github.com/pires/go-proxyproto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sandertv/go-raknet"
 	"log"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -22,11 +24,7 @@ var (
 	handshakeCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "gamma_handshakes",
 		Help: "The total number of handshakes made to each proxy by type",
-	}, []string{"type", "host", "country"})
-	underAttackStatus = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "gamma_underAttack",
-		Help: "Is the proxy under attack",
-	})
+	}, []string{"type", "host"})
 )
 
 type Gateway struct {
@@ -41,6 +39,23 @@ type Gateway struct {
 
 func (gateway *Gateway) KeepProcessActive() {
 	gateway.wg.Wait()
+}
+
+func (gateway *Gateway) EnablePrometheus(bind string) error {
+	gateway.wg.Add(1)
+
+	go func() {
+		defer gateway.wg.Done()
+
+		http.Handle("/metrics", promhttp.Handler())
+		err := http.ListenAndServe(bind, nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	log.Println("Enabling Prometheus metrics endpoint on", bind)
+	return nil
 }
 
 func (gateway *Gateway) Close() {
@@ -266,6 +281,8 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 			return err
 		}
 	}
+
+	handshakeCount.With(prometheus.Labels{"type": "login", "host": pc.ServerAddr}).Inc()
 
 	proxyUID := proxyUID(pc.ServerAddr, addr)
 	if GammaConfig.Debug {
