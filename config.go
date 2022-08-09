@@ -271,7 +271,6 @@ func (cfg *ProxyConfig) LoadFromPath(path string) error {
 
 	var loadedCfg map[string]interface{}
 	if err := json.Unmarshal(bb, &loadedCfg); err != nil {
-		log.Println(string(bb))
 		return err
 	}
 

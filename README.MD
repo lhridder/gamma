@@ -7,8 +7,6 @@ adaptation from [haveachin/bedprox](https://github.com/haveachin/bedprox)
 - TODO
 
 ## TODO
-- Implement prometheus exporter
-- Implement proxy protocol (receive and send)
 - Implement API
 - Implement L7 protection
 

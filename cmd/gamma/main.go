@@ -3,8 +3,11 @@ package main
 import (
 	"flag"
 	"github.com/lhridder/gamma"
+	"github.com/sandertv/go-raknet"
 	"log"
+	"net"
 	"os"
+	"time"
 )
 
 const (
@@ -60,6 +63,11 @@ func main() {
 		proxies = append(proxies, &gamma.Proxy{
 			Config: &cfg,
 			UID:    name,
+			Dialer: raknet.Dialer{
+				UpstreamDialer: &net.Dialer{
+					Timeout: 5 * time.Second,
+				},
+			},
 		})
 	}
 
@@ -81,7 +89,15 @@ func main() {
 				return
 			}
 
-			proxy := &gamma.Proxy{Config: cfg}
+			proxy := &gamma.Proxy{
+				Config: cfg,
+				UID:    cfg.Domains[0],
+				Dialer: raknet.Dialer{
+					UpstreamDialer: &net.Dialer{
+						Timeout: 5 * time.Second,
+					},
+				},
+			}
 			if err := gateway.RegisterProxy(proxy); err != nil {
 				log.Println("Failed registering proxy; error:", err)
 			}
@@ -96,7 +112,7 @@ func main() {
 		}
 	}
 
-	log.Println("Starting Infrared")
+	log.Println("Starting Gamma")
 	if err := gateway.ListenAndServe(proxies); err != nil {
 		log.Fatal("Gateway exited; error: ", err)
 	}

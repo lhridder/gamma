@@ -3,9 +3,12 @@ package gamma
 import (
 	"fmt"
 	"github.com/lhridder/gamma/protocol"
+	"github.com/pires/go-proxyproto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sandertv/go-raknet"
 	"log"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -19,10 +22,10 @@ var (
 )
 
 type Proxy struct {
-	Config            *ProxyConfig
-	UID               string
-	cancelTimeoutFunc func()
-	mu                sync.Mutex
+	Config *ProxyConfig
+	UID    string
+	mu     sync.Mutex
+	Dialer raknet.Dialer
 
 	/*
 		cacheOnlineTime   time.Time
@@ -78,20 +81,61 @@ func proxyUID(domain, addr string) string {
 	return fmt.Sprintf("%s@%s", strings.ToLower(domain), addr)
 }
 
-func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
-	rc, err := proxy.Config.dialer.DialTimeout(proxy.ProxyTo(), proxy.Timeout())
-	defer rc.Close()
+func (proxy *Proxy) Dial() (*raknet.Conn, error) {
+	c, err := proxy.Dialer.Dial(proxy.Config.ProxyTo)
 	if err != nil {
-		err = conn.Disconnect(proxy.DisconnectMessage())
+		return nil, err
+	}
+	return c, err
+}
+
+type proxyProtocolDialer struct {
+	connAddr       net.Addr
+	upstreamDialer raknet.UpstreamDialer
+}
+
+func (d proxyProtocolDialer) Dial(network, address string) (net.Conn, error) {
+	rc, err := d.upstreamDialer.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+
+	header := &proxyproto.Header{
+		Version:           2,
+		Command:           proxyproto.PROXY,
+		TransportProtocol: proxyproto.UDPv4,
+		SourceAddr:        d.connAddr.(*net.UDPAddr),
+		DestinationAddr:   rc.RemoteAddr(),
+	}
+
+	if _, err = header.WriteTo(rc); err != nil {
+		return rc, err
+	}
+
+	return rc, nil
+}
+
+func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
+	if proxy.ProxyProtocol() {
+		proxy.Dialer.UpstreamDialer = &proxyProtocolDialer{
+			connAddr:       conn.RemoteAddr,
+			upstreamDialer: proxy.Dialer.UpstreamDialer,
+		}
+	}
+
+	rc, err := proxy.Dial()
+	if err != nil {
+		log.Printf("[i] %s did not respond to ping; is the target offline?", proxy.ProxyTo())
+		err := conn.Disconnect(proxy.DisconnectMessage())
 		if err != nil {
 			return err
 		}
-		log.Printf("[i] %s did not respond to ping; is the target offline?", proxy.ProxyTo())
-		return err
+		return nil
 	}
+	defer rc.Close()
 
 	if _, err := rc.Write(conn.ReadBytes); err != nil {
-		log.Println(err)
+		return err
 		rc.Close()
 		return err
 	}
