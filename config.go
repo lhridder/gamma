@@ -3,7 +3,6 @@ package gamma
 import (
 	"encoding/json"
 	"github.com/fsnotify/fsnotify"
-	"github.com/sandertv/go-raknet"
 	"io/ioutil"
 	"log"
 	"os"
@@ -36,7 +35,6 @@ type ProxyConfig struct {
 
 	removeCallback func()
 	changeCallback func()
-	dialer         raknet.Dialer
 
 	Domains            []string `json:"domains"`
 	ListenTo           string   `json:"listenTo"`
