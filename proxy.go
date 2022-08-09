@@ -26,13 +26,6 @@ type Proxy struct {
 	UID    string
 	mu     sync.Mutex
 	Dialer raknet.Dialer
-
-	/*
-		cacheOnlineTime   time.Time
-		cacheStatusTime   time.Time
-		cacheResponse     status.ClientBoundResponse
-		cacheOnlineStatus bool
-	*/
 }
 
 func (proxy *Proxy) DomainNames() []string {
