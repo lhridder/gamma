@@ -3,30 +3,37 @@ package gamma
 import (
 	"encoding/json"
 	"github.com/fsnotify/fsnotify"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
 )
 
+type Service struct {
+	Enabled bool   `yaml:"enabled"`
+	Bind    string `yaml:"bind"`
+}
+
+type Ping struct {
+	Edition         string `yaml:"edition"`
+	VersionName     string `yaml:"versionName"`
+	VersionProtocol int    `yaml:"versionProtocol"`
+	Description     string `yaml:"description"`
+	PlayerCount     int    `yaml:"playerCount"`
+	MaxPlayerCount  int    `yaml:"maxPlayerCount"`
+	Gamemode        string `yaml:"gamemode"`
+	GamemodeNumeric int    `yaml:"gamemodeNumeric"`
+}
+
 type GlobalConfig struct {
-	ReceiveProxyProtocol bool   `json:"receiveProxyProtocol"`
-	PrometheusEnabled    bool   `json:"prometheusEnabled"`
-	PrometheusBind       string `json:"prometheusBind"`
-	ApiEnabled           bool   `json:"apiEnabled"`
-	ApiBind              string `json:"apiBind"`
-	GenericJoinResponse  string `json:"genericJoinResponse"`
-	PingEdition          string `json:"pingEdition"`
-	PingVersionName      string `json:"pingVersionName"`
-	PingDescription      string `json:"pingDescription"`
-	PingVersionProtocol  int    `json:"pingVersionProtocol"`
-	PingPlayerCount      int    `json:"pingPlayerCount"`
-	PingMaxPlayerCount   int    `json:"pingMaxPlayerCount"`
-	PingGamemode         string `json:"pingGamemode"`
-	PingGamemodeNumeric  int    `json:"pingGamemodeNumeric"`
-	Debug                bool   `json:"debug"`
+	Prometheus           Service
+	Api                  Service
+	Ping                 Ping
+	Debug                bool   `yaml:"debug"`
+	ReceiveProxyProtocol bool   `yaml:"receiveProxyProtocol"`
+	GenericJoinResponse  string `yaml:"genericJoinResponse"`
 }
 
 type ProxyConfig struct {
@@ -48,21 +55,27 @@ type ProxyConfig struct {
 var GammaConfig GlobalConfig
 
 var DefaultConfig = GlobalConfig{
-	ReceiveProxyProtocol: false,
-	PrometheusEnabled:    false,
-	PrometheusBind:       ":9100",
-	ApiEnabled:           false,
-	ApiBind:              ":5000",
-	GenericJoinResponse:  "There is no proxy associated with this domain. Please check your configuration.",
-	PingEdition:          "MCPE",
-	PingVersionName:      "Gamma",
-	PingDescription:      "Gamma proxy",
-	PingVersionProtocol:  527,
-	PingPlayerCount:      0,
-	PingMaxPlayerCount:   10,
-	PingGamemode:         "SURVIVAL",
-	PingGamemodeNumeric:  1,
 	Debug:                false,
+	GenericJoinResponse:  "There is no proxy associated with this domain. Please check your configuration.",
+	ReceiveProxyProtocol: false,
+	Prometheus: Service{
+		Enabled: false,
+		Bind:    ":9060",
+	},
+	Api: Service{
+		Enabled: false,
+		Bind:    ":5000",
+	},
+	Ping: Ping{
+		Edition:         "MCPE",
+		VersionName:     "1.19.2",
+		VersionProtocol: 527,
+		Description:     "Gamma proxy",
+		PlayerCount:     0,
+		MaxPlayerCount:  10,
+		Gamemode:        "SURVIVAL",
+		GamemodeNumeric: 1,
+	},
 }
 
 var DefaultProxyConfig = ProxyConfig{
@@ -76,18 +89,17 @@ var DefaultProxyConfig = ProxyConfig{
 }
 
 func LoadGlobalConfig() error {
-	jsonFile, err := os.Open("config.json")
+	log.Println("Loading config.yml")
+	ymlFile, err := ioutil.ReadFile("config.yml")
 	if err != nil {
 		return err
 	}
 	var config = DefaultConfig
-	jsonParser := json.NewDecoder(jsonFile)
-	err = jsonParser.Decode(&config)
+	err = yaml.Unmarshal(ymlFile, &config)
 	if err != nil {
 		return err
 	}
 	GammaConfig = config
-	_ = jsonFile.Close()
 	return nil
 }
 

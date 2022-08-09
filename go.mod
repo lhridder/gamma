@@ -8,6 +8,7 @@ require (
 	github.com/pires/go-proxyproto v0.6.2
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sandertv/go-raknet v1.11.0
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

@@ -44,7 +44,6 @@ func init() {
 func main() {
 	log.Println("Starting gamma")
 
-	log.Println("Loading global config")
 	err := gamma.LoadGlobalConfig()
 	if err != nil {
 		log.Println(err)
@@ -104,8 +103,8 @@ func main() {
 		}
 	}()
 
-	if gamma.GammaConfig.PrometheusEnabled {
-		err := gateway.EnablePrometheus(gamma.GammaConfig.PrometheusBind)
+	if gamma.GammaConfig.Prometheus.Enabled {
+		err := gateway.EnablePrometheus(gamma.GammaConfig.Prometheus.Bind)
 		if err != nil {
 			log.Println(err)
 			return

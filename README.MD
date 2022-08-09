@@ -18,27 +18,27 @@ adaptation from [haveachin/bedprox](https://github.com/haveachin/bedprox)
 
 `./gamma -config-path="."`
 
-## Global config.json
+## Global config.yml
 ### Example/Default
-```json
-{
-  "receiveProxyProtocol": false,
-  "prometheusEnabled": false,
-  "prometheusBind": ":9100",
-  "apiEnabled": false,
-  "apiBind": ":5000",
-  "genericJoinResponse": "There is no proxy associated with this domain. Please check your configuration.",
-  "listenerBind": ":19132",
-  "pingEdition": "MCPE",
-  "pingVersionName": "Gamma",
-  "pingDescription": "Gamma proxy",
-  "pingVersionProtocol": 527,
-  "pingPlayerCount": 0,
-  "pingMaxPlayerCount": 10,
-  "pingGamemode": "SURVIVAL",
-  "pingGamemodeNumeric": 1,
-  "debug": false
-}
+```yaml
+debug: false
+genericJoinResponse: There is no proxy associated with this domain. Please check your configuration.
+receiveProxyProtocol: false
+prometheus:
+  enabled: false
+  bind: :9060
+api:
+  enabled: false
+  bind: :5000
+ping:
+  edition: MCPE
+  versionname: Gamma
+  versionProtocol: 527
+  description: Gamma proxy
+  playerCount: 0
+  maxPlayerCount: 10
+  gamemode: SURVIVAL
+  gamemodeNumeric: 1
 ```
 
 Values can be left out if they don't deviate from the default, a config.json with just `{}` is still required for startup.

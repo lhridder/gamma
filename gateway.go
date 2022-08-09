@@ -150,7 +150,7 @@ func (gateway *Gateway) RegisterProxy(proxy *Proxy) error {
 }
 
 func marshalPong(l *raknet.Listener) []byte {
-	motd := strings.Split(GammaConfig.PingDescription, "\n")
+	motd := strings.Split(GammaConfig.Ping.Description, "\n")
 	motd1 := motd[0]
 	motd2 := ""
 	if len(motd) > 1 {
@@ -159,8 +159,8 @@ func marshalPong(l *raknet.Listener) []byte {
 
 	port := l.Addr().(*net.UDPAddr).Port
 	return []byte(fmt.Sprintf("%v;%v;%v;%v;%v;%v;%v;%v;%v;%v;%v;%v;",
-		GammaConfig.PingEdition, motd1, GammaConfig.PingVersionProtocol, GammaConfig.PingVersionName, GammaConfig.PingPlayerCount, GammaConfig.PingMaxPlayerCount,
-		l.ID(), motd2, GammaConfig.PingGamemode, GammaConfig.PingGamemodeNumeric, port, port))
+		GammaConfig.Ping.Edition, motd1, GammaConfig.Ping.VersionProtocol, GammaConfig.Ping.VersionName, GammaConfig.Ping.PlayerCount, GammaConfig.Ping.MaxPlayerCount,
+		l.ID(), motd2, GammaConfig.Ping.Gamemode, GammaConfig.Ping.GamemodeNumeric, port, port))
 }
 
 func (gateway *Gateway) ListenAndServe(proxies []*Proxy) error {
