@@ -121,13 +121,13 @@ func readFilePaths(path string) ([]string, error) {
 	return filePaths, err
 }
 
-func LoadProxyConfigsFromPath(path string) (map[string]ProxyConfig, error) {
+func LoadProxyConfigsFromPath(path string) (map[string]*ProxyConfig, error) {
 	filePaths, err := readFilePaths(path)
 	if err != nil {
 		return nil, err
 	}
 
-	cfgs := make(map[string]ProxyConfig)
+	cfgs := make(map[string]*ProxyConfig)
 
 	for _, filePath := range filePaths {
 		cfg, err := NewProxyConfigFromPath(filePath)
@@ -140,17 +140,17 @@ func LoadProxyConfigsFromPath(path string) (map[string]ProxyConfig, error) {
 	return cfgs, nil
 }
 
-func NewProxyConfigFromPath(path string) (ProxyConfig, error) {
+func NewProxyConfigFromPath(path string) (*ProxyConfig, error) {
 	log.Println("Loading", path)
 
 	cfg, err := LoadFromPath(path)
 	if err != nil {
-		return ProxyConfig{}, err
+		return nil, err
 	}
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return ProxyConfig{}, err
+		return nil, err
 	}
 	cfg.watcher = watcher
 
@@ -162,22 +162,22 @@ func NewProxyConfigFromPath(path string) (ProxyConfig, error) {
 	}()
 
 	if err := watcher.Add(path); err != nil {
-		return ProxyConfig{}, err
+		return nil, err
 	}
 
 	return cfg, err
 }
 
-func LoadFromPath(path string) (ProxyConfig, error) {
-	config := DefaultProxyConfig
+func LoadFromPath(path string) (*ProxyConfig, error) {
+	config := &DefaultProxyConfig
 
 	bb, err := ioutil.ReadFile(path)
 	if err != nil {
-		return ProxyConfig{}, err
+		return nil, err
 	}
 
 	if err := json.Unmarshal(bb, &config); err != nil {
-		return ProxyConfig{}, err
+		return nil, err
 	}
 
 	return config, err
@@ -207,7 +207,7 @@ func WatchProxyConfigFolder(path string, out chan *ProxyConfig) error {
 					log.Printf("Failed loading %s; error %s", event.Name, err)
 					continue
 				}
-				out <- &proxyCfg
+				out <- proxyCfg
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
