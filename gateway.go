@@ -105,7 +105,7 @@ func (gateway *Gateway) CloseProxy(proxyUID string) {
 
 func (gateway *Gateway) RegisterProxy(proxy *Proxy) error {
 	// Register new Proxy
-	uids := proxy.DomainNames()
+	uids := proxy.UIDs()
 	for _, uid := range uids {
 		log.Println("Registering proxy with UID", uid)
 		gateway.Proxies.Store(uid, proxy)
@@ -273,14 +273,12 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 		}
 	}
 
-	handshakeCount.With(prometheus.Labels{"type": "login", "host": pc.ServerAddr}).Inc()
-
 	proxyUID := proxyUID(pc.ServerAddr, addr)
 	if GammaConfig.Debug {
 		log.Printf("[i] %s requests proxy with UID %s", pc.RemoteAddr, proxyUID)
 	}
 
-	v, ok := gateway.Proxies.Load(pc.ServerAddr)
+	v, ok := gateway.Proxies.Load(proxyUID)
 	if !ok {
 		err = pc.Disconnect(GammaConfig.GenericJoinResponse)
 		if err != nil {
@@ -290,6 +288,7 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 	}
 
 	proxy := v.(*Proxy)
+	handshakeCount.With(prometheus.Labels{"type": "login", "host": proxy.DomainName()}).Inc()
 
 	_ = conn.SetDeadline(time.Time{})
 

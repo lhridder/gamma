@@ -70,6 +70,15 @@ func (proxy *Proxy) ProxyProtocol() bool {
 	return proxy.Config.SendProxyProtocol
 }
 
+func (proxy *Proxy) UIDs() []string {
+	var uids []string
+	for _, domain := range proxy.DomainNames() {
+		uid := proxyUID(domain, proxy.ListenTo())
+		uids = append(uids, uid)
+	}
+	return uids
+}
+
 func proxyUID(domain, addr string) string {
 	return fmt.Sprintf("%s@%s", strings.ToLower(domain), addr)
 }
