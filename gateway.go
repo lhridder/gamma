@@ -280,15 +280,22 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 
 	v, ok := gateway.Proxies.Load(proxyUID)
 	if !ok {
-		err = pc.Disconnect(GammaConfig.GenericJoinResponse)
-		if err != nil {
-			return err
+		v, ok = gateway.Proxies.Load(fmt.Sprintf("*@%s", addr))
+		if !ok {
+			err = pc.Disconnect(GammaConfig.GenericJoinResponse)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
-		return nil
 	}
 
 	proxy := v.(*Proxy)
 	handshakeCount.With(prometheus.Labels{"type": "login", "host": proxy.DomainName()}).Inc()
+
+	if GammaConfig.Debug {
+		log.Printf("[i] %s connecting through config %s", pc.RemoteAddr, proxy.DomainName())
+	}
 
 	_ = conn.SetDeadline(time.Time{})
 

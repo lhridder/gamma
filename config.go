@@ -121,20 +121,20 @@ func readFilePaths(path string) ([]string, error) {
 	return filePaths, err
 }
 
-func LoadProxyConfigsFromPath(path string) (map[string]*ProxyConfig, error) {
+func LoadProxyConfigsFromPath(path string) ([]*ProxyConfig, error) {
 	filePaths, err := readFilePaths(path)
 	if err != nil {
 		return nil, err
 	}
 
-	cfgs := make(map[string]*ProxyConfig)
+	var cfgs []*ProxyConfig
 
 	for _, filePath := range filePaths {
 		cfg, err := NewProxyConfigFromPath(filePath)
 		if err != nil {
 			return nil, err
 		}
-		cfgs[filePath] = cfg
+		cfgs = append(cfgs, cfg)
 	}
 
 	return cfgs, nil
@@ -169,7 +169,17 @@ func NewProxyConfigFromPath(path string) (*ProxyConfig, error) {
 }
 
 func LoadFromPath(path string) (*ProxyConfig, error) {
-	config := &DefaultProxyConfig
+	var config *ProxyConfig
+
+	defaultCfg, err := json.Marshal(&DefaultProxyConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(defaultCfg, &config)
+	if err != nil {
+		return nil, err
+	}
 
 	bb, err := ioutil.ReadFile(path)
 	if err != nil {

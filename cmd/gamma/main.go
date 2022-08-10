@@ -58,10 +58,9 @@ func main() {
 	}
 
 	var proxies []*gamma.Proxy
-	for name, cfg := range cfgs {
+	for _, cfg := range cfgs {
 		proxies = append(proxies, &gamma.Proxy{
 			Config: cfg,
-			UID:    name,
 			Dialer: raknet.Dialer{
 				UpstreamDialer: &net.Dialer{
 					Timeout: 5 * time.Second,
