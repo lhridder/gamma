@@ -119,6 +119,11 @@ func (d proxyProtocolDialer) Dial(network, address string) (net.Conn, error) {
 
 func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
 	if proxy.ProxyProtocol() {
+		proxy.Dialer = raknet.Dialer{
+			UpstreamDialer: &net.Dialer{
+				Timeout: 5 * time.Second,
+			},
+		}
 		proxy.Dialer.UpstreamDialer = &proxyProtocolDialer{
 			connAddr:       conn.RemoteAddr,
 			upstreamDialer: proxy.Dialer.UpstreamDialer,
@@ -137,7 +142,6 @@ func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
 	defer rc.Close()
 
 	if _, err := rc.Write(conn.ReadBytes); err != nil {
-		return err
 		rc.Close()
 		return err
 	}
