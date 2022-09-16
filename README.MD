@@ -32,7 +32,7 @@ api:
   bind: :5000
 ping:
   edition: MCPE
-  versionname: Gamma
+  versionname: 1.19.2
   versionProtocol: 527
   description: Gamma proxy
   playerCount: 0
@@ -70,7 +70,7 @@ Values can be left out if they don't deviate from the default, a config.json wit
 
 ```json
 {
-  "domainNames": ["mc.example.com", "example.com"],
+  "domains": ["mc.example.com", "example.com"],
   "listenTo": ":19132",
   "proxyTo": ":8080",
   "proxyProtocol": false,
