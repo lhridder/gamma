@@ -64,7 +64,7 @@ func main() {
 			Dialer: raknet.Dialer{
 				UpstreamDialer: &net.Dialer{
 					Timeout: 5 * time.Second,
-					LocalAddr: &net.TCPAddr{
+					LocalAddr: &net.UDPAddr{
 						IP: net.ParseIP(cfg.ProxyBind),
 					},
 				},
