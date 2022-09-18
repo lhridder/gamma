@@ -70,6 +70,12 @@ func (proxy *Proxy) ProxyProtocol() bool {
 	return proxy.Config.SendProxyProtocol
 }
 
+func (proxy *Proxy) ProxyBind() string {
+	proxy.Config.RLock()
+	defer proxy.Config.RUnlock()
+	return proxy.Config.ProxyBind
+}
+
 func (proxy *Proxy) UIDs() []string {
 	var uids []string
 	for _, domain := range proxy.DomainNames() {
@@ -122,6 +128,9 @@ func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
 		proxy.Dialer = raknet.Dialer{
 			UpstreamDialer: &net.Dialer{
 				Timeout: 5 * time.Second,
+				LocalAddr: &net.TCPAddr{
+					IP: net.ParseIP(proxy.ProxyBind()),
+				},
 			},
 		}
 		proxy.Dialer.UpstreamDialer = &proxyProtocolDialer{
