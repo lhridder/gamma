@@ -14,6 +14,13 @@ type Login struct {
 	ConnectionRequest []byte
 }
 
+// RequestNetworkSettings is sent by the client to request network settings, such as compression, from the server.
+type RequestNetworkSettings struct {
+	// ClientProtocol is the protocol version of the player. The player is disconnected if the protocol is
+	// incompatible with the protocol of the server.
+	ClientProtocol int32
+}
+
 func (pk *Login) ID() uint32 {
 	return 0x01
 }
@@ -31,4 +38,23 @@ func (pk *Login) Unmarshal(r *Reader) error {
 // Marshal ...
 func (pk *Login) Marshal(buf *Writer) {
 	log.Fatal("not implemented yet")
+}
+
+// ID ...
+func (pk *RequestNetworkSettings) ID() uint32 {
+	return 0xC1
+}
+
+// Marshal ...
+func (pk *RequestNetworkSettings) Marshal(w *Writer) {
+	w.BEInt32(&pk.ClientProtocol)
+}
+
+// Unmarshal ...
+func (pk *RequestNetworkSettings) Unmarshal(r *Reader) error {
+	err := r.BEInt32(&pk.ClientProtocol)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -7,10 +7,11 @@ import (
 
 type ProcessedConn struct {
 	*raknet.Conn
-	RemoteAddr net.Addr
-	ServerAddr string
-	Username   string
-	ReadBytes  []byte
+	RemoteAddr   net.Addr
+	ServerAddr   string
+	Username     string
+	NetworkBytes []byte
+	ReadBytes    []byte
 }
 
 func (c ProcessedConn) Disconnect(msg string) error {

@@ -242,9 +242,31 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 	if err != nil {
 		return err
 	}
-	pc.ReadBytes = b
+	pc.NetworkBytes = b
+	var reqpacket protocol.RequestNetworkSettings
+	reqdecoder := protocol.NewDecoder(bytes.NewReader(b))
+	reqpks, err := reqdecoder.Decode()
+	err = protocol.UnmarshalPacket(reqpks[0], &reqpacket)
+	if err != nil {
+		return err
+	}
+	log.Println(reqpacket.ClientProtocol)
 
-	decoder := protocol.NewDecoder(bytes.NewReader(b))
+	netset := []byte{254, 12, 143, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0}
+	_, err = conn.Write(netset)
+	if err != nil {
+		return err
+	}
+
+	loginPacket, err := pc.ReadPacket()
+	if err != nil {
+		return err
+	}
+	pc.ReadBytes = loginPacket
+
+	log.Println("received loginpacket")
+	decoder := protocol.NewDecoder(bytes.NewReader(loginPacket))
+	decoder.EnableCompression(protocol.FlateCompression{})
 	pks, err := decoder.Decode()
 	if err != nil {
 		return err
@@ -258,6 +280,8 @@ func (gateway *Gateway) serve(conn net.Conn, addr string) (rerr error) {
 	if err := protocol.UnmarshalPacket(pks[0], &loginPk); err != nil {
 		return err
 	}
+
+	log.Println("unmarshaled loginpacket")
 
 	iData, cData, err := login.Parse(loginPk.ConnectionRequest)
 	if err != nil {

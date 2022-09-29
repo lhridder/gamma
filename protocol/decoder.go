@@ -2,11 +2,9 @@ package protocol
 
 import (
 	"bytes"
-	"compress/flate"
 	"errors"
 	"fmt"
 	"io"
-	"sync"
 )
 
 const (
@@ -20,8 +18,9 @@ const (
 type Decoder struct {
 	// r holds the io.Reader that packets are read from if the reader does not implement packetReader. When
 	// this is the case, the buf field has a non-zero length.
-	r   io.Reader
-	buf []byte
+	r           io.Reader
+	buf         []byte
+	compression Compression
 }
 
 // NewDecoder returns a new decoder decoding data from the io.Reader passed. One read call from the reader is
@@ -50,10 +49,13 @@ func (decoder *Decoder) Decode() (packets [][]byte, err error) {
 	}
 	data = data[1:]
 
-	b, err := decoder.decompress(data)
-	if err != nil {
-		return nil, err
+	if decoder.compression != nil {
+		data, err = decoder.compression.Decompress(data)
+		if err != nil {
+			return nil, fmt.Errorf("error decompressing packet: %v", err)
+		}
 	}
+	b := bytes.NewBuffer(data)
 	for b.Len() != 0 {
 		var length uint32
 		if err := Varuint32(b, &length); err != nil {
@@ -65,31 +67,6 @@ func (decoder *Decoder) Decode() (packets [][]byte, err error) {
 		return nil, fmt.Errorf("number of packets %v in compressed batch exceeds %v", len(packets), maximumInBatch)
 	}
 	return packets, nil
-}
-
-// decompress decompresses the data passed and returns it as a byte slice.
-func (decoder *Decoder) decompress(data []byte) (*bytes.Buffer, error) {
-	buf := bytes.NewBuffer(data)
-	c := DecompressPool.Get().(io.ReadCloser)
-	defer DecompressPool.Put(c)
-
-	if err := c.(flate.Resetter).Reset(buf, nil); err != nil {
-		return nil, fmt.Errorf("error resetting flate decompressor: %w", err)
-	}
-	_ = c.Close()
-
-	raw := bytes.NewBuffer(make([]byte, 0, len(data)*2))
-	if _, err := io.Copy(raw, c); err != nil {
-		return nil, fmt.Errorf("error reading decompressed data: %v", err)
-	}
-	return raw, nil
-}
-
-// DecompressPool is a sync.Pool for io.ReadCloser flate readers. These are pooled for connections.
-var DecompressPool = sync.Pool{
-	New: func() interface{} {
-		return flate.NewReader(bytes.NewReader(nil))
-	},
 }
 
 func Varuint32(src io.ByteReader, x *uint32) error {
@@ -106,4 +83,9 @@ func Varuint32(src io.ByteReader, x *uint32) error {
 		}
 	}
 	return errors.New("varuint32 did not terminate after 5 bytes")
+}
+
+// EnableCompression enables compression for the Decoder.
+func (decoder *Decoder) EnableCompression(compression Compression) {
+	decoder.compression = compression
 }

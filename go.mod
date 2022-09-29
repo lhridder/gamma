@@ -5,9 +5,11 @@ go 1.18
 require (
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang/snappy v0.0.4
+	github.com/klauspost/compress v1.15.11
 	github.com/pires/go-proxyproto v0.6.2
 	github.com/prometheus/client_golang v1.12.2
-	github.com/sandertv/go-raknet v1.11.0
+	github.com/sandertv/go-raknet v1.12.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 

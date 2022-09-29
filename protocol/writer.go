@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"io"
+	"unsafe"
 )
 
 type EncodeReader interface {
@@ -37,4 +38,10 @@ func (w *Writer) Varuint32(x uint32) {
 		x >>= 7
 	}
 	_ = w.WriteByte(byte(x))
+}
+
+// BEInt32 writes a big endian int32 to the underlying buffer.
+func (w *Writer) BEInt32(x *int32) {
+	data := *(*[4]byte)(unsafe.Pointer(x))
+	_, _ = w.Write(data[:])
 }
