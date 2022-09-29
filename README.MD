@@ -32,8 +32,8 @@ api:
   bind: :5000
 ping:
   edition: MCPE
-  versionname: 1.19.2
-  versionProtocol: 527
+  versionname: 1.19.30
+  versionProtocol: 554
   description: Gamma proxy
   playerCount: 0
   maxPlayerCount: 10
@@ -146,3 +146,4 @@ GET `/` will return 200(OK)
 - [haveachin/infrared](https://github.com/haveachin/infrared)
 - [lhridder/infrared](https://github.com/lhridder/infrared)
 - [Sandertv/go-raknet](https://github.com/Sandertv/go-raknet)
+- [Sandertv/gophertunnel](https://github.com/Sandertv/gophertunnel)

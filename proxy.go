@@ -150,24 +150,20 @@ func (proxy *Proxy) HandleLogin(conn protocol.ProcessedConn) error {
 	}
 	defer rc.Close()
 
-	log.Println("sending")
-	log.Println(conn.NetworkBytes)
 	if _, err := rc.Write(conn.NetworkBytes); err != nil {
 		rc.Close()
 		return err
 	}
 
-	packet, err := conn.ReadPacket()
+	_, err = rc.ReadPacket()
 	if err != nil {
 		return err
 	}
-	log.Println(packet)
 
 	if _, err := rc.Write(conn.ReadBytes); err != nil {
 		rc.Close()
 		return err
 	}
-	log.Println("sent join packet")
 	playersConnected.With(prometheus.Labels{"host": proxy.DomainName()}).Inc()
 	defer playersConnected.With(prometheus.Labels{"host": proxy.DomainName()}).Dec()
 
