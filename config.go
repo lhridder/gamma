@@ -68,8 +68,8 @@ var DefaultConfig = GlobalConfig{
 	},
 	Ping: Ping{
 		Edition:         "MCPE",
-		VersionName:     "1.19.30",
-		VersionProtocol: 554,
+		VersionName:     "1.19.50",
+		VersionProtocol: 560,
 		Description:     "Gamma proxy",
 		PlayerCount:     0,
 		MaxPlayerCount:  10,

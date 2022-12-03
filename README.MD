@@ -32,8 +32,8 @@ api:
   bind: :5000
 ping:
   edition: MCPE
-  versionname: 1.19.30
-  versionProtocol: 554
+  versionname: 1.19.50
+  versionProtocol: 560
   description: Gamma proxy
   playerCount: 0
   maxPlayerCount: 10
